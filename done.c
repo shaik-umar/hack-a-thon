@@ -34,18 +34,18 @@ typedef struct {
     Cart *cart;
 } Customer;
 
-int UserId;
+Item **Store = NULL;
+Customer **UserList = NULL;
+Employee **AdminList = NULL;
+
+int UserId, MId = 0;
 bool Exit = false;
 bool SignInUserList = true;
 int NewId = 100;
 int NewItemId = 10010;
 
-Item **Store = NULL;
-Customer **UserList = NULL;
-Employee **AdminList = NULL;
-
 void UserCookies(int id, const char *name, const char *password);
-void initializeEmployeeUserList();
+void initializeAdmin();
 void initializeStore();
 bool LogEmployee();
 void AdminMenuInterface();
@@ -70,7 +70,7 @@ void ThrowError();
 void LogConfirm();
 
 int main() {
-    initializeEmployeeUserList();
+    initializeAdmin();
     initializeStore();
     printf(GREEN"\n\n\n\t\t\t\tTecH Store\n\n"CLEAR);
     do {
@@ -108,7 +108,7 @@ int main() {
     return 0;
 }
 
-void initializeEmployeeUserList() {
+void initializeAdmin() {
     AdminList = (Employee **)malloc(3 * sizeof(Employee *));
     for (int i = 0; i < 3; i++) {
         AdminList[i] = (Employee *)malloc(sizeof(Employee));
@@ -174,16 +174,22 @@ void initializeStore() {
 
 bool LogEmployee() {
     int id;
+    printf("::Employee Login::\n\n");
     printf("Enter the Employee Id: ");
     scanf("%d", &id);
-
-    printf(GREEN"Employee Name: %s\n"CLEAR, AdminList[id]->name);
-
+    if(id == 11) {
+        MId = 0;
+    } else if(id == 22) {
+        MId = 1;
+    } else if(id == 44) {
+        MId = 2;
+    }
+    printf(GREEN"Employee Name: %s\n"CLEAR, AdminList[MId]->name);
     char enter_password[12];
     printf("Enter the Employee Password: ");
     scanf("%s", enter_password);
 
-    int check = strcmp(AdminList[id]->password, enter_password);
+    int check = strcmp(AdminList[MId]->password, enter_password);
 
     return !check;
 }
@@ -194,11 +200,12 @@ void AdminMenuInterface() {
         int flag = 0;
         do {
             int choice;
+            printf(GREEN"\t\t\t%s\n"CLEAR, AdminList[MId]->name);
             printf("1. Stock Items\n");
             printf("2. Restock Items\n");
             printf("3. Display Stock\n");
             printf("4. Display User Details\n");
-            printf("4. Exit\n");
+            printf("5. Exit\n");
             printf("Enter Your Choice: ");
             scanf("%d", &choice);
 
@@ -231,7 +238,7 @@ void AdminMenuInterface() {
 }
 
 void RegisterUser() {
-    printf("Sign Up Form: \n");
+    printf("Sign Up Form: \n\n");
     int index = NewId - 100;
 
     UserList = (Customer **)realloc(UserList, index * sizeof(Customer *));
@@ -263,7 +270,7 @@ void UserMenuInterface() {
         printf("1. Item Menu\n");
         printf("2. Add Items to Cart\n");
         printf("3. Display Cart\n");
-        printf("4. Buy Items\n");
+        printf("4. Billing\n");
         printf("5. Exit\n");
         printf("Enter Choice: ");
         scanf("%d", &choice);
@@ -279,8 +286,10 @@ void UserMenuInterface() {
                 break;
             case 4:
                 Billing(UserId);
+                printf(GREEN"Thankyou for Shopping\n"CLEAR);
                 break;
             case 5:
+                LogOutMsg();
                 return;
             default:
                 ThrowError();
@@ -311,7 +320,7 @@ bool LogUser() {
 void Enteruser() {
     do {
         int choice;
-        printf("1. Sign Up.\n");
+        printf("1. Sign Up\n");
         printf("2. Log In\n");
         printf("3. Exit\n");
         printf("Enter Choice: ");
@@ -401,6 +410,7 @@ void DisplayCart(int id) {
         printf("%d \n",head->price);
         head = head->next;
     }
+    printf("\n\n");
 }
 
 void Billing(int id){
@@ -442,21 +452,21 @@ void BuyItems(int id){
 		    printf("1. Continue Shopping\n");
 		    printf("2. Stop the Shopping\n");
             printf("\n");
-		    printf("Choose Your option: ");
+		    printf("Enter Choice: ");
 		    scanf("%d",&choice);
 		    if(choice != 1) {
-			    printf(GREEN"\nThank You for Shopping\n"CLEAR);
+			    printf(GREEN"\nAdded to Cart\n"CLEAR);
                 return;
 	        }
 	    }
 	    i++;
 	
 	    int item_id;
-	    printf("\nEnter item Id: ");
+	    printf("\nEnter Item Id: ");
 	    scanf("%d", &item_id);
 
         int nitems;
-	    printf("\nEnter No.of items: ");
+	    printf("\nEnter No.of Items: ");
 	    scanf("%d", &nitems);
 
         item_id -= 10000;
@@ -496,7 +506,7 @@ void Nouser() {
 
 void LogOutMsg() {
     printf("\n");
-    printf(GREEN"Exit Succesfull\n"CLEAR);
+    printf(GREEN"Logged Out\n"CLEAR);
     printf("\n");
 }
 
@@ -507,7 +517,7 @@ void ThankEmployee() {
 }
 
 void window_alert() {
-    printf(GREEN"\nRegistered\n"CLEAR);
+    printf(GREEN"Registered\n\n"CLEAR);
 }
 
 void ThrowError() {
@@ -517,7 +527,7 @@ void ThrowError() {
 
 void LogConfirm() {
     printf("\n");
-    printf(GREEN"Login Successful!\n"CLEAR);
+    printf(GREEN"Login Successfull!\n"CLEAR);
     printf("\n");
 }
 
@@ -548,7 +558,7 @@ void UserData(){
 		printf("No Sign in's Yet!!\n");
 		return;
 	} else {
-		printf("Details About users: \n");
+		printf("User Details: \n");
 		printf("SI.NO \t\t UserId \t\t User Name\n");
 		for(int i = 0; i < UserId - 100; i++){
 			printf("%d \t\t %d \t\t %s \n", i + 1 , 100 + i, UserList[i]->name);
@@ -557,11 +567,12 @@ void UserData(){
 }
 
 void UserCookies(int id, const char *name, const char *password) {
-    FILE *fp = fopen("UserCookies.txt", "a");
+    FILE *fp = fopen("UserCookies.txt", "w");
     if (fp != NULL) {
         fprintf(fp, "ID: %d, Name: %s, Password: %s\n", id, name, password);
         fclose(fp);
     } else {
         printf("Error: Unable to open file for writing.\n");
     }
+
 }
